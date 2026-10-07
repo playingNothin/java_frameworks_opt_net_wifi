@@ -111,8 +111,19 @@ endif
 
 # The WiFi HAL that you should be linking.
 # ============================================================
+# Moto G20 (java): the stock Unisoc libwifi-hal.so ships as a vendor blob
+# (the platform fallback stub cannot drive the sprd WLAN driver). The platform
+# module is still defined - other modules link it - but marked uninstallable
+# when the board requests it, so the blob occupies vendor/lib64/libwifi-hal.so.
+ifneq ($(BOARD_NO_PLATFORM_WIFI_HAL),true)
 include $(CLEAR_VARS)
 LOCAL_MODULE := libwifi-hal
+else
+include $(CLEAR_VARS)
+LOCAL_MODULE := libwifi-hal
+# redirect the stub to /system so the vendor blob keeps its path
+LOCAL_MODULE_PATH_64 := $(TARGET_OUT_SHARED_LIBRARIES)
+LOCAL_MODULE_PATH_32 := $(2ND_TARGET_OUT_SHARED_LIBRARIES)
 LOCAL_PROPRIETARY_MODULE := true
 LOCAL_CFLAGS := $(wifi_hal_cflags)
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
@@ -132,6 +143,8 @@ LOCAL_SRC_FILES := \
     hal_tool.cpp
 LOCAL_WHOLE_STATIC_LIBRARIES := $(LIB_WIFI_HAL) libwifi-hal-common
 include $(BUILD_SHARED_LIBRARY)
+
+endif # BOARD_NO_PLATFORM_WIFI_HAL
 
 # Test utilities (e.g. mock classes) for libwifi-hal
 # ============================================================
